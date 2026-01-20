@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Ability Battle</title>
+  <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+  <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    #log { white-space: pre-line; border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; background: #f9f9f9; }
+    button { margin: 5px; padding: 10px 20px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h1>Ability Battle</h1>
+
+  <!-- ログ表示 -->
+  <div id="log"></div>
+
+  <!-- 能力ボタン -->
+  <button id="attackBtn">攻撃</button>
+  <button id="fireballBtn">火球</button>
+  <button id="guardBtn">防御</button>
+  <button id="healBtn">回復</button>
+
+  <py-script>
+import random
+from js import document
+
+# ===== ログ出力関数 =====
+def log(text):
+    log_div = document.getElementById("log")
+    log_div.innerHTML += text + "\n"
+    log_div.scrollTop = log_div.scrollHeight  # 自動スクロール
+
+# ===== キャラクター =====
+class Character:
+    def __init__(self, name):
+        self.name = name
+        self.hp = 100
+        self.mp = 50
+        self.guard = False
+
+    def take_damage(self, dmg):
+        if self.guard:
+            dmg = dmg // 2
+            self.guard = False
+            log(f"{self.name}は防御してダメージ半減！")
+        self.hp -= dmg
+        if self.hp < 0:
+            self.hp = 0
+
+# ===== 能力 =====
+def attack(user, target):
+    dmg = random.randint(10, 20)
+    log(f"{user.name}の攻撃！ {dmg}ダメージ")
+    target.take_damage(dmg)
+
+def fireball(user, target):
+    cost = 15
+    if user.mp < cost:
+        log("MPが足りない！")
+        return
+    user.mp -= cost
+    dmg = random.randint(20, 35)
+    log(f"{user.name}の🔥火球！ {dmg}ダメージ")
+    target.take_damage(dmg)
+
+def guard(user, target):
+    cost = 5
+    if user.mp < cost:
+        log("MPが足りない！")
+        return
+    user.mp -= cost
+    user.guard = True
+    log(f"{user.name}は🛡防御態勢に入った")
+
+def heal(user, target):
+    cost = 10
+    if user.mp < cost:
+        log("MPが足りない！")
+        return
+    user.mp -= cost
+    amount = random.randint(15, 25)
+    user.hp += amount
+    if user.hp > 100:
+        user.hp = 100
+    log(f"{user.name}は✨回復！ HPが{amount}回復した")
+
+abilities = [attack, fireball, guard, heal]
+
+# ===== AI =====
+def ai_choose_ability(ai, enemy):
+    if ai.hp <= 30 and ai.mp >= 10 and random.random() < 0.7:
+        return 3  # 回復
+    if enemy.hp <= 25 and ai.mp >= 15:
+        return 1  # 火球
+    if ai.mp < 15:
+        return 0  # 攻撃
+    return random.randint(0, 3)
+
+# ===== ターン処理 =====
+def turn(player, enemy, choice=None, is_ai=False):
+    # ターン開始時MP回復
+    player.mp += 5
+    if player.mp > 50:
+        player.mp = 50
+
+    log(f"\n--- {player.name}のターン ---")
+    log(f"{player.name} HP: {player.hp} / MP: {player.mp}")
+    log(f"{enemy.name} HP: {enemy.hp} / MP: {enemy.mp}")
+
+    if is_ai:
+        choice = ai_choose_ability(player, enemy)
+
+    abilities[choice](player, enemy)
+
+# ===== ゲーム初期化 =====
+player1 = Character("プレイヤーA")
+player2 = Character("プレイヤーB")
+turn_count = 1
+
+# ===== プレイヤー操作 =====
+def player_choice(choice):
+    global turn_count
+    if player1.hp <= 0 or player2.hp <= 0:
+        return
+
+    # プレイヤーターン
+    turn(player1, player2, choice)
+    if player2.hp <= 0:
+        log("\n====== バトル終了 ======")
+        log("プレイヤーAの勝利！")
+        return
+
+    # AIターン
+    turn(player2, player1, is_ai=True)
+    if player1.hp <= 0:
+        log("\n====== バトル終了 ======")
+        log("プレイヤーBの勝利！")
+        return
+
+    turn_count += 1
+
+# ===== ボタンイベント =====
+document.getElementById("attackBtn").element.onclick = lambda e: player_choice(0)
+document.getElementById("fireballBtn").element.onclick = lambda e: player_choice(1)
+document.getElementById("guardBtn").element.onclick = lambda e: player_choice(2)
+document.getElementById("healBtn").element.onclick = lambda e: player_choice(3)
+  </py-script>
+</body>
+</html>

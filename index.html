@@ -14,10 +14,8 @@
 <body>
   <h1>Ability Battle</h1>
 
-  <!-- ログ表示 -->
   <div id="log"></div>
 
-  <!-- 能力ボタン -->
   <button id="attackBtn">攻撃</button>
   <button id="fireballBtn">火球</button>
   <button id="guardBtn">防御</button>
@@ -27,11 +25,11 @@
 import random
 from js import document
 
-# ===== ログ出力関数 =====
+# ===== ログ出力 =====
 def log(text):
     log_div = document.getElementById("log")
     log_div.innerHTML += text + "\n"
-    log_div.scrollTop = log_div.scrollHeight  # 自動スクロール
+    log_div.scrollTop = log_div.scrollHeight
 
 # ===== キャラクター =====
 class Character:
@@ -92,27 +90,23 @@ abilities = [attack, fireball, guard, heal]
 # ===== AI =====
 def ai_choose_ability(ai, enemy):
     if ai.hp <= 30 and ai.mp >= 10 and random.random() < 0.7:
-        return 3  # 回復
+        return 3
     if enemy.hp <= 25 and ai.mp >= 15:
-        return 1  # 火球
+        return 1
     if ai.mp < 15:
-        return 0  # 攻撃
+        return 0
     return random.randint(0, 3)
 
 # ===== ターン処理 =====
 def turn(player, enemy, choice=None, is_ai=False):
-    # ターン開始時MP回復
     player.mp += 5
     if player.mp > 50:
         player.mp = 50
-
     log(f"\n--- {player.name}のターン ---")
     log(f"{player.name} HP: {player.hp} / MP: {player.mp}")
     log(f"{enemy.name} HP: {enemy.hp} / MP: {enemy.mp}")
-
     if is_ai:
         choice = ai_choose_ability(player, enemy)
-
     abilities[choice](player, enemy)
 
 # ===== ゲーム初期化 =====
@@ -125,21 +119,16 @@ def player_choice(choice):
     global turn_count
     if player1.hp <= 0 or player2.hp <= 0:
         return
-
-    # プレイヤーターン
     turn(player1, player2, choice)
     if player2.hp <= 0:
         log("\n====== バトル終了 ======")
         log("プレイヤーAの勝利！")
         return
-
-    # AIターン
     turn(player2, player1, is_ai=True)
     if player1.hp <= 0:
         log("\n====== バトル終了 ======")
         log("プレイヤーBの勝利！")
         return
-
     turn_count += 1
 
 # ===== ボタンイベント =====
@@ -148,5 +137,6 @@ document.getElementById("fireballBtn").element.onclick = lambda e: player_choice
 document.getElementById("guardBtn").element.onclick = lambda e: player_choice(2)
 document.getElementById("healBtn").element.onclick = lambda e: player_choice(3)
   </py-script>
+
 </body>
 </html>
